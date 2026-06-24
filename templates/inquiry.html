@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마인크래프트 화이트리스트 신청</title>
+    <title>문의하기</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -49,7 +49,13 @@
             margin-top: 16px;
         }
 
-        input[type="text"] {
+        label .optional {
+            color: rgba(255,255,255,0.35);
+            font-size: 0.75rem;
+            margin-left: 4px;
+        }
+
+        input[type="text"], textarea {
             width: 100%;
             padding: 12px 16px;
             background: rgba(255,255,255,0.08);
@@ -57,17 +63,23 @@
             border-radius: 8px;
             color: #fff;
             font-size: 1rem;
+            font-family: 'Segoe UI', sans-serif;
             transition: border-color 0.2s;
             outline: none;
+            resize: none;
         }
 
-        input[type="text"]:focus {
+        input[type="text"]:focus, textarea:focus {
             border-color: #5865f2;
             background: rgba(88, 101, 242, 0.1);
         }
 
-        input[type="text"]::placeholder {
+        input[type="text"]::placeholder, textarea::placeholder {
             color: rgba(255,255,255,0.25);
+        }
+
+        textarea {
+            height: 120px;
         }
 
         button[type="submit"] {
@@ -126,28 +138,31 @@
 </head>
 <body>
     <div class="card">
-        <h1>화이트리스트 신청</h1>
-        <p class="subtitle">관리자 승인 후 서버에 접속할 수 있습니다</p>
+        <h1>문의하기</h1>
+        <p class="subtitle">문의 내용을 작성하면 관리자에게 전달됩니다</p>
 
-        <form id="applyForm">
+        <form id="inquiryForm">
             <label for="forest_nick">숲 닉네임</label>
             <input type="text" id="forest_nick" name="forest_nick" placeholder="숲(SOOP) 닉네임 입력" required>
 
-            <label for="minecraft_nick">마인크래프트 닉네임</label>
-            <input type="text" id="minecraft_nick" name="minecraft_nick" placeholder="마크 닉네임 입력 (정확히 입력)" required>
+            <label for="minecraft_nick">마인크래프트 닉네임 <span class="optional">(선택)</span></label>
+            <input type="text" id="minecraft_nick" name="minecraft_nick" placeholder="마크 닉네임 입력">
 
-            <button type="submit" id="submitBtn">신청하기</button>
+            <label for="content">문의 내용</label>
+            <textarea id="content" name="content" placeholder="문의 내용을 입력해주세요" required></textarea>
+
+            <button type="submit" id="submitBtn">문의 보내기</button>
         </form>
 
         <div class="message" id="resultMsg"></div>
 
         <div class="nav">
-            <a href="/inquiry">문의하기</a>
+            <a href="/">화이트리스트 신청으로 돌아가기</a>
         </div>
     </div>
 
     <script>
-        document.getElementById("applyForm").addEventListener("submit", async function(e) {
+        document.getElementById("inquiryForm").addEventListener("submit", async function(e) {
             e.preventDefault();
 
             const btn = document.getElementById("submitBtn");
@@ -159,7 +174,7 @@
             msg.style.display = "none";
 
             try {
-                const res = await fetch("/submit", { method: "POST", body: formData });
+                const res = await fetch("/inquiry/submit", { method: "POST", body: formData });
                 const data = await res.json();
 
                 msg.textContent = data.message;
@@ -168,17 +183,17 @@
 
                 if (data.success) {
                     this.reset();
-                    btn.textContent = "신청 완료 ✓";
+                    btn.textContent = "전송 완료";
                 } else {
                     btn.disabled = false;
-                    btn.textContent = "신청하기";
+                    btn.textContent = "문의 보내기";
                 }
             } catch {
                 msg.textContent = "서버 오류가 발생했습니다. 다시 시도해주세요.";
                 msg.className = "message error";
                 msg.style.display = "block";
                 btn.disabled = false;
-                btn.textContent = "신청하기";
+                btn.textContent = "문의 보내기";
             }
         });
     </script>

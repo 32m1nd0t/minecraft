@@ -56,6 +56,48 @@ def _send_to_discord(forest_nick: str, minecraft_nick: str) -> bool:
     return resp.ok
 
 
+@app.route("/inquiry")
+def inquiry():
+    return render_template("inquiry.html")
+
+
+@app.route("/inquiry/submit", methods=["POST"])
+def inquiry_submit():
+    forest_nick = request.form.get("forest_nick", "").strip()
+    minecraft_nick = request.form.get("minecraft_nick", "").strip()
+    content = request.form.get("content", "").strip()
+
+    if not forest_nick or not content:
+        return jsonify({"success": False, "message": "필수 항목을 입력해주세요."}), 400
+
+    ok = _send_inquiry_to_discord(forest_nick, minecraft_nick, content)
+    if ok:
+        return jsonify({"success": True, "message": "문의가 전달되었습니다! 관리자 확인 후 답변드릴게요."})
+    return jsonify({"success": False, "message": "전송에 실패했습니다. 다시 시도해주세요."}), 500
+
+
+def _send_inquiry_to_discord(forest_nick: str, minecraft_nick: str, content: str) -> bool:
+    fields = [{"name": "숲 닉네임", "value": forest_nick, "inline": True}]
+    if minecraft_nick:
+        fields.append({"name": "마크 닉네임", "value": minecraft_nick, "inline": True})
+    fields.append({"name": "문의 내용", "value": content, "inline": False})
+
+    payload = {
+        "embeds": [{
+            "title": "문의 접수",
+            "color": 0xEB459E,
+            "fields": fields,
+        }]
+    }
+    resp = requests.post(
+        f"{DISCORD_API}/channels/{CHANNEL_ID}/messages",
+        headers={"Authorization": f"Bot {BOT_TOKEN}", "Content-Type": "application/json"},
+        json=payload,
+        timeout=5,
+    )
+    return resp.ok
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
