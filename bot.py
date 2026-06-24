@@ -34,18 +34,24 @@ def add_to_whitelist(minecraft_nick: str) -> tuple[bool, str]:
         with open(whitelist_path, "r", encoding="utf-8") as f:
             whitelist = json.load(f)
 
-        if any(e.get("name", "").lower() == minecraft_nick.lower() for e in whitelist):
-            return False, f"`{minecraft_nick}`은(는) 이미 등록되어 있습니다."
-
         uuid, exact_name = fetch_uuid(minecraft_nick)
-        whitelist.append({"uuid": uuid, "name": exact_name})
+        overwritten = False
+        for i, e in enumerate(whitelist):
+            if e.get("name", "").lower() == minecraft_nick.lower():
+                whitelist[i] = {"uuid": uuid, "name": exact_name}
+                overwritten = True
+                break
+
+        if not overwritten:
+            whitelist.append({"uuid": uuid, "name": exact_name})
 
         with open(whitelist_path, "w", encoding="utf-8") as f:
             json.dump(whitelist, f, indent=2, ensure_ascii=False)
 
+        action = "덮어쓰기 완료" if overwritten else "등록 완료"
         if uuid:
-            return True, f"`{exact_name}` 등록 완료! (UUID: {uuid})"
-        return True, f"`{exact_name}` 등록 완료! (UUID 조회 실패 — 오프라인 서버는 무관)"
+            return True, f"`{exact_name}` {action}! (UUID: {uuid})"
+        return True, f"`{exact_name}` {action}! (UUID 조회 실패 — 오프라인 서버는 무관)"
 
     except Exception as e:
         return False, f"오류: {e}"
