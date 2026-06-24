@@ -1,11 +1,26 @@
 import json
 import os
+import urllib.request
+import urllib.error
 import discord
 from discord.ext import commands
 from config import DISCORD_BOT_TOKEN, MINECRAFT_SERVER_PATH
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+
+def fetch_uuid(minecraft_nick: str) -> tuple[str, str]:
+    """Mojang API에서 UUID와 정확한 닉네임을 가져옴. 실패 시 빈 문자열 반환."""
+    try:
+        url = f"https://api.mojang.com/users/profiles/minecraft/{minecraft_nick}"
+        with urllib.request.urlopen(url, timeout=5) as resp:
+            data = json.loads(resp.read())
+        raw = data["id"]  # 하이픈 없는 UUID (32자)
+        uuid = f"{raw[0:8]}-{raw[8:12]}-{raw[12:16]}-{raw[16:20]}-{raw[20:32]}"
+        return uuid, data["name"]  # 정확한 대소문자 닉네임도 반환
+    except Exception:
+        return "", minecraft_nick
 
 
 def add_to_whitelist(minecraft_nick: str) -> tuple[bool, str]:
@@ -22,12 +37,15 @@ def add_to_whitelist(minecraft_nick: str) -> tuple[bool, str]:
         if any(e.get("name", "").lower() == minecraft_nick.lower() for e in whitelist):
             return False, f"`{minecraft_nick}`은(는) 이미 등록되어 있습니다."
 
-        whitelist.append({"uuid": "", "name": minecraft_nick})
+        uuid, exact_name = fetch_uuid(minecraft_nick)
+        whitelist.append({"uuid": uuid, "name": exact_name})
 
         with open(whitelist_path, "w", encoding="utf-8") as f:
             json.dump(whitelist, f, indent=2, ensure_ascii=False)
 
-        return True, f"`{minecraft_nick}` 등록 완료!"
+        if uuid:
+            return True, f"`{exact_name}` 등록 완료! (UUID: {uuid})"
+        return True, f"`{exact_name}` 등록 완료! (UUID 조회 실패 — 오프라인 서버는 무관)"
 
     except Exception as e:
         return False, f"오류: {e}"
