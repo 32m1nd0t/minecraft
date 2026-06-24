@@ -1,10 +1,7 @@
+# 로컬 봇(bot.py)에서만 사용하는 설정
+# Render Flask 서버는 환경변수를 사용하므로 이 파일 불필요
+
 DISCORD_BOT_TOKEN = "여기에_봇_토큰_입력"
 
-# 승인 알림을 받을 디스코드 채널 ID (숫자)
-APPROVAL_CHANNEL_ID = 123456789012345678
-
-# 마인크래프트 서버 폴더 경로 (server.properties가 있는 폴더)
+# 마인크래프트 서버 폴더 경로 (whitelist.json이 있는 폴더)
 MINECRAFT_SERVER_PATH = "C:/minecraft_server"
-
-# Flask 실행 포트
-FLASK_PORT = 5000
