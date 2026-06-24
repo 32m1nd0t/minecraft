@@ -4,7 +4,8 @@ import urllib.request
 import urllib.error
 import discord
 from discord.ext import commands
-from config import DISCORD_BOT_TOKEN, MINECRAFT_SERVER_PATH
+from mcrcon import MCRcon
+from config import DISCORD_BOT_TOKEN, MINECRAFT_SERVER_PATH, RCON_HOST, RCON_PORT, RCON_PASSWORD
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
@@ -49,8 +50,18 @@ def add_to_whitelist(minecraft_nick: str) -> tuple[bool, str]:
             json.dump(whitelist, f, indent=2, ensure_ascii=False)
 
         action = "덮어쓰기 완료" if overwritten else "등록 완료"
+
+        # RCON으로 서버에 whitelist reload 전송
+        try:
+            with MCRcon(RCON_HOST, RCON_PASSWORD, port=RCON_PORT) as mcr:
+                mcr.command("whitelist reload")
+        except Exception as rcon_err:
+            if uuid:
+                return True, f"`{exact_name}` {action}! (RCON 실패: {rcon_err})"
+            return True, f"`{exact_name}` {action}! (UUID 조회 실패 / RCON 실패: {rcon_err})"
+
         if uuid:
-            return True, f"`{exact_name}` {action}! (UUID: {uuid})"
+            return True, f"`{exact_name}` {action}!"
         return True, f"`{exact_name}` {action}! (UUID 조회 실패 — 오프라인 서버는 무관)"
 
     except Exception as e:
