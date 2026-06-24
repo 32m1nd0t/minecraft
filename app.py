@@ -6,6 +6,7 @@ app = Flask(__name__)
 
 BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN")
 CHANNEL_ID = os.environ.get("DISCORD_CHANNEL_ID")
+INQUIRY_CHANNEL_ID = os.environ.get("DISCORD_INQUIRY_CHANNEL_ID")
 DISCORD_API = "https://discord.com/api/v10"
 
 
@@ -90,7 +91,7 @@ def _send_inquiry_to_discord(forest_nick: str, minecraft_nick: str, content: str
         }]
     }
     resp = requests.post(
-        f"{DISCORD_API}/channels/{CHANNEL_ID}/messages",
+        f"{DISCORD_API}/channels/{INQUIRY_CHANNEL_ID}/messages",
         headers={"Authorization": f"Bot {BOT_TOKEN}", "Content-Type": "application/json"},
         json=payload,
         timeout=5,
